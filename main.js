@@ -4,13 +4,13 @@ const carritoContainer = document.getElementById("carrito-items");
 const carritoVacioMsg = document.getElementById("carrito-vacio");
 
 class Destino {
-    constructor(destino, duracion, tipoDeHotel, temporada, precio, imagen) {
+    constructor(destino, duracion, tipoDeHotel, temporada, precio) {
         this.destino = destino;
         this.duracion = duracion;
         this.tipoDeHotel = tipoDeHotel;
         this.temporada = temporada;
         this.precio = precio;
-        this.imagen = imagen;
+        this.imagen = ''; // La imagen se obtendrá dinámicamente
     }
 
     getResumen() {
@@ -30,49 +30,72 @@ class Adicional {
     }
 }
 
-
 const destinos = [
     new Destino("Dubai", 14, "Desayuno incluido", "Octubre - Noviembre", 3500),
     new Destino("Paris", 15, "Desayuno Incluido", "Marzo - Abril", 3300),
-    new Destino("Londres", 12, "Desayuno Incluido", "Febrero - Abril", 3700),
+    new Destino("Edinburgh", 12, "Desayuno Incluido", "Febrero - Abril", 3700),
     new Destino("Rio de Janeiro", 14, "Desayuno Incluido", "Diciembre - Abril", 2500),
     new Destino("Cancún", 14, "All Inclusive", "Diciembre - Enero", 3800),
-    new Destino("Bariloche", 10, "Media Pensión", "Julio - Septiembre", 1500),
-    new Destino("Iguazu", 6, "Media Pensión", "Mayo - Agosto", 1200),
+    new Destino("Buenos Aires", 10, "Media Pensión", "Julio - Septiembre", 1500),
+    new Destino("Miami", 6, "Media Pensión", "Mayo - Agosto", 3400),
 ];
 
 const adicionales = [
-    new Adicional("Seguro de viaje", 100),
-    new Adicional("Alquiler de auto", 150),
-    new Adicional("Traslados internos", 50),
-    new Adicional("Parque de diversiones", 70),
-    new Adicional("Paseo en lancha", 30),
-    new Adicional("Servicio de conserje", 20),
-    new Adicional("Entradas para recital", 60),
+    new Adicional("Seguro de viaje", 100, "https://images.pexels.com/photos/3799223/pexels-photo-3799223.jpeg"),
+    new Adicional("Alquiler de auto", 150, "https://images.pexels.com/photos/164634/pexels-photo-164634.jpeg"),
+    new Adicional("Traslados internos", 50, "https://images.pexels.com/photos/3848896/pexels-photo-3848896.jpeg"),
+    new Adicional("Parque de diversiones", 70, "https://images.pexels.com/photos/136412/pexels-photo-136412.jpeg"),
+    new Adicional("Paseo en barco", 80, "https://images.pexels.com/photos/27084529/pexels-photo-27084529.jpeg"), // Corregido
+    new Adicional("Servicio de conserje", 20, "https://images.pexels.com/photos/3771087/pexels-photo-3771087.jpeg"),
+    new Adicional("Entradas para recital", 60, "https://images.pexels.com/photos/27096592/pexels-photo-27096592.jpeg"),
 ];
+
 
 let carrito = JSON.parse(localStorage.getItem('carrito')) || {
     destino: null,
     adicionales: []
 };
 
+const obtenerImagenCiudad = (destino, callback) => {
+    fetch(`https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles=${destino}&origin=*`)
+        .then(response => response.json())
+        .then(data => {
+            const pages = data.query.pages;
+            const page = pages[Object.keys(pages)[0]];
+            if (page.original) {
+                callback(page.original.source);
+            } else {
+                console.warn(`No se encontró una imagen para ${destino}`);
+                callback('images/default.jpg'); // Imagen por defecto si no se encuentra
+            }
+        })
+        .catch(error => {
+            console.error('Error al obtener la imagen:', error);
+            callback('images/default.jpg'); // Imagen por defecto en caso de error
+        });
+}
+
 const crearCardDestino = destino => {
-    const card = document.createElement("div");
-    card.className = "card";
-    card.id = `Destino-${destino.destino}`;
+    obtenerImagenCiudad(destino.destino, imageUrl => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.id = `Destino-${destino.destino}`;
+        
+        destino.imagen = imageUrl;
 
-    card.innerHTML = `
-        <img src="${destino.imagen}" alt="${destino.destino}" class="card-img">
-        <h3>${destino.destino}</h3>
-        <p>Duración: ${destino.duracion} días</p>
-        <p>Tipo de hotel: ${destino.tipoDeHotel}</p>
-        <p>Temporada: ${destino.temporada}</p>
-        <p>Precio: USD ${destino.precio}</p>
-        <button>Agregar a cesta</button>
-    `;
+        card.innerHTML = `
+            <img src="${destino.imagen}" alt="${destino.destino}" class="card-img">
+            <h3>${destino.destino}</h3>
+            <p>Duración: ${destino.duracion} días</p>
+            <p>Tipo de hotel: ${destino.tipoDeHotel}</p>
+            <p>Temporada: ${destino.temporada}</p>
+            <p>Precio: USD ${destino.precio}</p>
+            <button>Agregar a cesta</button>
+        `;
 
-    card.querySelector("button").addEventListener("click", () => agregarDestinoACesta(destino));
-    containerUno.append(card);
+        card.querySelector("button").addEventListener("click", () => agregarDestinoACesta(destino));
+        containerUno.append(card);
+    });
 }
 
 const crearCardAdicional = adicional => {
@@ -118,15 +141,23 @@ const actualizarCarrito = () => {
 }
 
 const agregarDestinoACesta = destino => {
-    carrito.destino = destino;
-    actualizarCarrito();
-    Swal.fire('Destino agregado', destino.destino, 'success');
+    if (carrito.destino && carrito.destino.destino === destino.destino) {
+        Swal.fire('Destino ya agregado', destino.destino, 'warning');
+    } else {
+        carrito.destino = destino;
+        actualizarCarrito();
+        Swal.fire('Destino agregado', destino.destino, 'success');
+    }
 }
 
 const agregarAdicionalACesta = adicional => {
-    carrito.adicionales.push(adicional);
-    actualizarCarrito();
-    Swal.fire('Adicional agregado', adicional.tipodeadicional, 'success');
+    if (!carrito.adicionales.some(a => a.tipodeadicional === adicional.tipodeadicional)) {
+        carrito.adicionales.push(adicional);
+        actualizarCarrito();
+        Swal.fire('Adicional agregado', adicional.tipodeadicional, 'success');
+    } else {
+        Swal.fire('Adicional ya agregado', adicional.tipodeadicional, 'warning');
+    }
 }
 
 const limpiarCarrito = () => {
@@ -173,17 +204,11 @@ const eliminarUltimoItem = () => {
 document.getElementById("limpiar-carrito").addEventListener("click", limpiarCarrito);
 document.getElementById("eliminar-ultimo").addEventListener("click", eliminarUltimoItem);
 document.getElementById("checkout").addEventListener("click", () => {
-    if (carrito.destino || carrito.adicionales.length > 0) {
-        Swal.fire('¡Gracias por tu compra!', 'Tu orden está en camino.', 'success');
-    } else {
-        Swal.fire('Carrito vacío', 'Por favor, agrega al menos un ítem.', 'warning');
-    }
+    Swal.fire('Gracias por tu compra!', 'Procesaremos tu pedido.', 'success');
 });
 
-const inicializarInterfaz = () => {
+document.addEventListener("DOMContentLoaded", () => {
     destinos.forEach(crearCardDestino);
     adicionales.forEach(crearCardAdicional);
     actualizarCarrito();
-}
-
-inicializarInterfaz();
+});
