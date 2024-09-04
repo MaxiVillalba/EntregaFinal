@@ -10,7 +10,7 @@ class Destino {
         this.tipoDeHotel = tipoDeHotel;
         this.temporada = temporada;
         this.precio = precio;
-        this.imagen = ''; // La imagen se obtendrá dinámicamente
+        this.imagen = ''; 
     }
 
     getResumen() {
@@ -66,12 +66,12 @@ const obtenerImagenCiudad = (destino, callback) => {
                 callback(page.original.source);
             } else {
                 console.warn(`No se encontró una imagen para ${destino}`);
-                callback('images/default.jpg'); // Imagen por defecto si no se encuentra
+                callback('images/default.jpg'); 
             }
         })
         .catch(error => {
             console.error('Error al obtener la imagen:', error);
-            callback('images/default.jpg'); // Imagen por defecto en caso de error
+            callback('images/default.jpg'); 
         });
 }
 

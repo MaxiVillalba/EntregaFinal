@@ -45,7 +45,6 @@ section, aside {
     justify-content: space-between;
 }
 
-/* Ajuste para que las tarjetas tengan el mismo tamaño */
 .card {
     background-color: #ffffff;
     border: 1px solid #e1e1e1;
@@ -61,8 +60,8 @@ section, aside {
 
 .card img {
     width: 100%;
-    height: 200px; /* Altura fija para todas las imágenes */
-    object-fit: cover; /* Ajuste para que las imágenes mantengan su aspecto */
+    height: 200px; 
+    object-fit: cover; 
     border-radius: 5px;
     margin-bottom: 10px;
 }
@@ -87,7 +86,7 @@ section, aside {
     cursor: pointer;
     font-size: 1em;
     transition: background-color 0.2s ease-in-out;
-    margin-top: auto; /* Para empujar el botón hacia abajo */
+    margin-top: auto; 
 }
 
 .card button:hover {
